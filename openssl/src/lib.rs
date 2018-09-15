@@ -37,6 +37,7 @@ pub mod bn;
 #[cfg(not(libressl))]
 pub mod cms;
 pub mod conf;
+// pub mod crypto;
 pub mod derive;
 pub mod dh;
 pub mod dsa;
@@ -52,6 +53,7 @@ pub mod nid;
 pub mod ocsp;
 pub mod pkcs12;
 pub mod pkcs5;
+pub mod pkcs7;
 pub mod pkey;
 pub mod rand;
 pub mod rsa;

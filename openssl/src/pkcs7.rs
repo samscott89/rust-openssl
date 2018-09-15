@@ -76,7 +76,7 @@ impl PKCS7 {
         }
     }
 
-    pub fn decrypt(&self, pkey: &PKeyRef, cert: &X509Ref) -> Result<Vec<u8>, ErrorStack> {
+    pub fn decrypt<T>(&self, pkey: &PKeyRef<T>, cert: &X509Ref) -> Result<Vec<u8>, ErrorStack> {
         ffi::init();
 
         let output = MemBio::new()?;
@@ -104,7 +104,7 @@ impl PKCS7 {
         }
     }
 
-    pub fn sign(signcert: &X509Ref, pkey: &PKeyRef, certs: &Stack<X509>, input: &[u8], flags: PKCS7Flags) -> Result<PKCS7, ErrorStack> {
+    pub fn sign<T>(signcert: &X509Ref, pkey: &PKeyRef<T>, certs: &Stack<X509>, input: &[u8], flags: PKCS7Flags) -> Result<PKCS7, ErrorStack> {
         ffi::init();
 
         let input_bio = MemBioSlice::new(input)?;
@@ -149,22 +149,22 @@ mod tests {
     use x509::X509;
     use x509::store::X509StoreBuilder;
     use symm::Cipher;
-    use crypto::pkcs7::pk7_smime::PKCS7_STREAM;
-    use crypto::pkcs7::pk7_smime::PKCS7_DETACHED;
-    use crypto::pkcs7::pk7_smime::PKCS7;
+    // use pkcs7::PKCS7_STREAM;
+    // use pkcs7::PKCS7_DETACHED;
+    use pkcs7::{PKCS7, PKCS7Flags};
     use pkey::PKey;
     use stack::Stack;
 
     #[test]
     fn encrypt_decrypt_test() {
-        let cert = include_bytes!("../../../test/certs.pem");
+        let cert = include_bytes!("../test/certs.pem");
         let cert = X509::from_pem(cert).unwrap();
         let mut certs = Stack::new().unwrap();
         certs.push(cert.clone()).unwrap();
         let message: String = String::from("foo");
         let cypher = Cipher::des_ede3_cbc();
-        let flags = PKCS7_STREAM;
-        let pkey = include_bytes!("../../../test/key.pem");
+        let flags = PKCS7Flags::PKCS7_STREAM;
+        let pkey = include_bytes!("../test/key.pem");
         let pkey = PKey::private_key_from_pem(pkey).unwrap();
 
         let pkcs7 = PKCS7::encrypt(&certs, message.as_bytes(), cypher, flags).expect("should succeed");
@@ -181,16 +181,16 @@ mod tests {
 
     #[test]
     fn sign_verify_test_detached() {
-        let cert = include_bytes!("../../../test/cert.pem");
+        let cert = include_bytes!("../test/cert.pem");
         let cert = X509::from_pem(cert).unwrap();
         let certs = Stack::new().unwrap();
         let message: String = String::from("foo");
-        let flags = PKCS7_STREAM | PKCS7_DETACHED;
-        let pkey = include_bytes!("../../../test/key.pem");
+        let flags = PKCS7Flags::PKCS7_STREAM | PKCS7Flags::PKCS7_DETACHED;
+        let pkey = include_bytes!("../test/key.pem");
         let pkey = PKey::private_key_from_pem(pkey).unwrap();
         let mut store_builder = X509StoreBuilder::new().expect("should succeed");
 
-        let root_ca = include_bytes!("../../../test/root-ca.pem");
+        let root_ca = include_bytes!("../test/root-ca.pem");
         let root_ca = X509::from_pem(root_ca).unwrap();
         store_builder.add_cert(root_ca).expect("should succeed");
 
@@ -214,16 +214,16 @@ mod tests {
 
     #[test]
     fn sign_verify_test_normal() {
-        let cert = include_bytes!("../../../test/cert.pem");
+        let cert = include_bytes!("../test/cert.pem");
         let cert = X509::from_pem(cert).unwrap();
         let certs = Stack::new().unwrap();
         let message: String = String::from("foo");
-        let flags = PKCS7_STREAM;
-        let pkey = include_bytes!("../../../test/key.pem");
+        let flags = PKCS7Flags::PKCS7_STREAM;
+        let pkey = include_bytes!("../test/key.pem");
         let pkey = PKey::private_key_from_pem(pkey).unwrap();
         let mut store_builder = X509StoreBuilder::new().expect("should succeed");
 
-        let root_ca = include_bytes!("../../../test/root-ca.pem");
+        let root_ca = include_bytes!("../test/root-ca.pem");
         let root_ca = X509::from_pem(root_ca).unwrap();
         store_builder.add_cert(root_ca).expect("should succeed");
 
